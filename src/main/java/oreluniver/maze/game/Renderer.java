@@ -1,8 +1,12 @@
 package oreluniver.maze.game;
 
+import oreluniver.maze.engine.GameItem;
 import oreluniver.maze.engine.Utils;
 import oreluniver.maze.engine.Window;
+import oreluniver.maze.engine.gfx.Mesh;
 import oreluniver.maze.engine.gfx.ShaderProgram;
+import oreluniver.maze.engine.gfx.Transformation;
+import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
@@ -14,13 +18,23 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class Renderer {
 
-    private int vboId;
+    /**
+     * FOV in Radians
+     */
+    private static final float FOV = (float) Math.toRadians(60.0f);
 
-    private int vaoId;
+    private static final float Z_NEAR = 0.01f;
 
-    ShaderProgram shaderProgram;
+    private static final float Z_FAR = 1000.0f;
+
+    private Transformation transformation;
+
+    private ShaderProgram shaderProgram;
+
+    private Matrix4f projectionMatrix;
 
     public Renderer() {
+        transformation = new Transformation();
     }
 
     public void init() throws Exception {
@@ -29,44 +43,15 @@ public class Renderer {
         shaderProgram.createFragmentShader(Utils.loadResource("../../resources/main/shaders/fragment.fs.glsl"));
         shaderProgram.link();
 
-        float[] vertices = new float[] {
-                0.0f, 0.5f, 0.0f,
-                -0.5f, -0.5f, 0.0f,
-                0.5f, -0.5f, 0.0f
-        };
-        FloatBuffer verticesBuffer = null;
-        try {
-            verticesBuffer = MemoryUtil.memAllocFloat(vertices.length);
-            verticesBuffer.put(vertices).flip();
-
-            // Create the VAO and bind to it
-            vaoId = glGenVertexArrays();
-            glBindVertexArray(vaoId);
-
-            // Create the VBO and bind to it
-            vboId = glGenBuffers();
-            glBindBuffer(GL_ARRAY_BUFFER, vboId);
-            glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);
-            // Define structure of the data
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-
-            // Unbind the VBO
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-            // Unbind the VAO
-            glBindVertexArray(0);
-        } finally {
-            if (verticesBuffer != null) {
-                MemoryUtil.memFree(verticesBuffer);
-            }
-        }
+        shaderProgram.createUniform("projectionMatrix");
+        shaderProgram.createUniform("worldMatrix");
     }
 
     public void clear() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    public void render(Window window) {
+    public void render(Window window, GameItem[] gameItems) {
         clear();
 
         if (window.isResized()) {
@@ -76,16 +61,19 @@ public class Renderer {
 
         shaderProgram.bind();
 
-        // Bind to the VAO
-        glBindVertexArray(vaoId);
-        glEnableVertexAttribArray(0);
+        projectionMatrix = transformation.getProjectionMatrix(FOV, window.getWidth(), window.getHeight(), Z_NEAR, Z_FAR);
+        shaderProgram.setUniform("projectionMatrix", projectionMatrix);
 
-        // Draw the vertices
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        // Restore state
-        glDisableVertexAttribArray(0);
-        glBindVertexArray(0);
+        // Render game items
+        for (GameItem gameItem : gameItems) {
+            Matrix4f worldMatrix = transformation.getWorldMatrix(
+                gameItem.getPosition(),
+                gameItem.getRotation(),
+                gameItem.getScale()
+            );
+            shaderProgram.setUniform("worldMatrix", worldMatrix);
+            gameItem.getMesh().render();
+        }
 
         shaderProgram.unbind();
     }
@@ -94,15 +82,5 @@ public class Renderer {
         if (shaderProgram != null) {
             shaderProgram.cleanup();
         }
-
-        glDisableVertexAttribArray(0);
-
-        // Delete the VBO
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDeleteBuffers(vboId);
-
-        // Delete the VAO
-        glBindVertexArray(0);
-        glDeleteVertexArrays(vaoId);
     }
 }

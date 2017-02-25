@@ -7,6 +7,9 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
 }
 
 import org.gradle.internal.os.OperatingSystem
@@ -24,6 +27,7 @@ switch ( OperatingSystem.current() ) {
 }
 
 project.ext.lwjglVersion = "3.1.1"
+project.ext.jomlVersion = "1.7.1"
 
 dependencies {
     compile "org.lwjgl:lwjgl:${lwjglVersion}"
@@ -38,4 +42,6 @@ dependencies {
     runtime "org.lwjgl:lwjgl-openal:${lwjglVersion}:${lwjglNatives}"
     runtime "org.lwjgl:lwjgl-opengl:${lwjglVersion}:${lwjglNatives}"
     runtime "org.lwjgl:lwjgl-stb:${lwjglVersion}:${lwjglNatives}"
+
+    compile "org.joml:joml:${jomlVersion}"
 }
