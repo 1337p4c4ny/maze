@@ -8,7 +8,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            boolean vSync = true;
+            boolean vSync = false;
             IGameLogic gameLogic = new MazeGame();
             GameEngine gameEngine = new GameEngine("Maze", 1280, 720, vSync, gameLogic);
             gameEngine.start();

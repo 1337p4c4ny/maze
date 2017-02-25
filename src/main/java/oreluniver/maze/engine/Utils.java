@@ -9,7 +9,7 @@ public class Utils {
     public static String loadResource(String fileName) {
         String result = "";
         try {
-            InputStream in = Utils.class.getClassLoader().getResourceAsStream(fileName);
+            InputStream in = Utils.class.getResourceAsStream(fileName);
             Scanner scanner = new Scanner(in, "UTF-8");
             result = scanner.useDelimiter("\\A").next();
         } catch (Exception e) {

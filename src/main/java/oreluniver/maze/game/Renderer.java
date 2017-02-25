@@ -3,6 +3,7 @@ package oreluniver.maze.game;
 import oreluniver.maze.engine.GameItem;
 import oreluniver.maze.engine.Utils;
 import oreluniver.maze.engine.Window;
+import oreluniver.maze.engine.gfx.Camera;
 import oreluniver.maze.engine.gfx.Mesh;
 import oreluniver.maze.engine.gfx.ShaderProgram;
 import oreluniver.maze.engine.gfx.Transformation;
@@ -31,27 +32,26 @@ public class Renderer {
 
     private ShaderProgram shaderProgram;
 
-    private Matrix4f projectionMatrix;
-
     public Renderer() {
         transformation = new Transformation();
     }
 
     public void init() throws Exception {
         shaderProgram = new ShaderProgram();
-        shaderProgram.createVertexShader(Utils.loadResource("../../resources/main/shaders/vertex.vs.glsl"));
-        shaderProgram.createFragmentShader(Utils.loadResource("../../resources/main/shaders/fragment.fs.glsl"));
+        shaderProgram.createVertexShader(Utils.loadResource("/shaders/vertex.vs.glsl"));
+        shaderProgram.createFragmentShader(Utils.loadResource("/shaders/fragment.fs.glsl"));
         shaderProgram.link();
 
         shaderProgram.createUniform("projectionMatrix");
-        shaderProgram.createUniform("worldMatrix");
+        shaderProgram.createUniform("modelViewMatrix");
+        shaderProgram.createUniform("texture_sampler");
     }
 
     public void clear() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    public void render(Window window, GameItem[] gameItems) {
+    public void render(Window window, Camera camera, GameItem[] gameItems) {
         clear();
 
         if (window.isResized()) {
@@ -61,17 +61,18 @@ public class Renderer {
 
         shaderProgram.bind();
 
-        projectionMatrix = transformation.getProjectionMatrix(FOV, window.getWidth(), window.getHeight(), Z_NEAR, Z_FAR);
+        shaderProgram.setUniform("texture_sampler", 0);
+
+        Matrix4f projectionMatrix = transformation.getProjectionMatrix(FOV, window.getWidth(), window.getHeight(),
+                Z_NEAR, Z_FAR);
         shaderProgram.setUniform("projectionMatrix", projectionMatrix);
+
+        Matrix4f viewMatrix = transformation.getViewMatrix(camera);
 
         // Render game items
         for (GameItem gameItem : gameItems) {
-            Matrix4f worldMatrix = transformation.getWorldMatrix(
-                gameItem.getPosition(),
-                gameItem.getRotation(),
-                gameItem.getScale()
-            );
-            shaderProgram.setUniform("worldMatrix", worldMatrix);
+            Matrix4f modelViewMatrix = transformation.getModelViewMatrix(gameItem, viewMatrix);
+            shaderProgram.setUniform("modelViewMatrix", modelViewMatrix);
             gameItem.getMesh().render();
         }
 

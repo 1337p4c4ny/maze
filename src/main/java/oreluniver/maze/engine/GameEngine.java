@@ -2,9 +2,9 @@ package oreluniver.maze.engine;
 
 public class GameEngine implements Runnable {
 
-    public static final int TARGET_FPS = 60;
+    public static final int TARGET_FPS = 120;
 
-    public static final int TARGET_UPS = 30;
+    public static final int TARGET_UPS = 60;
 
     private final Window window;
 
@@ -13,12 +13,14 @@ public class GameEngine implements Runnable {
     private final Timer timer;
 
     private final IGameLogic gameLogic;
+    private MouseInput mouseInput;
 
     public GameEngine(String windowTitle, int width, int height, boolean vSync, IGameLogic gameLogic) throws Exception {
         gameLoopThread = new Thread(this, "GAME_LOOP_THREAD");
         window = new Window(windowTitle, width, height, vSync);
         this.gameLogic = gameLogic;
         timer = new Timer();
+        mouseInput = new MouseInput();
     }
 
     public void start() {
@@ -50,6 +52,7 @@ public class GameEngine implements Runnable {
         window.init();
         timer.init();
         gameLogic.init();
+        mouseInput.init(window);
     }
 
     protected void gameLoop() {
@@ -89,11 +92,12 @@ public class GameEngine implements Runnable {
     }
 
     protected void input() {
-        gameLogic.input(window);
+        mouseInput.input(window);
+        gameLogic.input(window, mouseInput);
     }
 
     protected void update(float interval) {
-        gameLogic.update(interval);
+        gameLogic.update(interval, mouseInput);
     }
 
     protected void render() {

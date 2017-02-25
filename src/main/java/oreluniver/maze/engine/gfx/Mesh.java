@@ -4,6 +4,7 @@ package oreluniver.maze.engine.gfx;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
@@ -17,13 +18,17 @@ public class Mesh {
 
     private final int idxVboId;
 
-    private final int colorVboId;
+    private final int texCoordsVboId;
 
     private final int vertexCount;
 
-    public Mesh(float[] positions, float[] colors, int[] indices) {
+    private final Texture texture;
+
+    public Mesh(float[] positions, float[] textCoords, int[] indices, Texture texture) {
+        this.texture = texture;
+
         FloatBuffer posBuffer = null;
-        FloatBuffer colorBuffer = null;
+        FloatBuffer texCoordsBuffer = null;
         IntBuffer indicesBuffer = null;
         try {
             vertexCount = indices.length;
@@ -39,13 +44,13 @@ public class Mesh {
             glBufferData(GL_ARRAY_BUFFER, posBuffer, GL_STATIC_DRAW);
             glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 
-            // Color VBO
-            colorVboId = glGenBuffers();
-            colorBuffer = MemoryUtil.memAllocFloat(colors.length);
-            colorBuffer.put(colors).flip();
-            glBindBuffer(GL_ARRAY_BUFFER, colorVboId);
-            glBufferData(GL_ARRAY_BUFFER, colorBuffer, GL_STATIC_DRAW);
-            glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
+            // Tex coords VBO
+            texCoordsVboId = glGenBuffers();
+            texCoordsBuffer = MemoryUtil.memAllocFloat(textCoords.length);
+            texCoordsBuffer.put(textCoords).flip();
+            glBindBuffer(GL_ARRAY_BUFFER, texCoordsVboId);
+            glBufferData(GL_ARRAY_BUFFER, texCoordsBuffer, GL_STATIC_DRAW);
+            glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
             // Index VBO
             idxVboId = glGenBuffers();
@@ -63,8 +68,8 @@ public class Mesh {
             if (indicesBuffer != null) {
                 MemoryUtil.memFree(indicesBuffer);
             }
-            if (colorBuffer != null) {
-                MemoryUtil.memFree(colorBuffer);
+            if (texCoordsBuffer != null) {
+                MemoryUtil.memFree(texCoordsBuffer);
             }
         }
     }
@@ -85,7 +90,9 @@ public class Mesh {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDeleteBuffers(posVboId);
         glDeleteBuffers(idxVboId);
-        glDeleteBuffers(colorVboId);
+        glDeleteBuffers(texCoordsVboId);
+
+        texture.cleanup();
 
         // Delete the VAO
         glBindVertexArray(0);
@@ -93,6 +100,9 @@ public class Mesh {
     }
 
     public void render() {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture.getId());
+
         // Bind to the VAO
         glBindVertexArray(getVaoId());
         glEnableVertexAttribArray(0);
