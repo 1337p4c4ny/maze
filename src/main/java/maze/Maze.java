@@ -1,5 +1,7 @@
 package maze;
 
+import maze.math.Vec2i;
+
 public interface Maze {
 
     int getWidth();
@@ -8,10 +10,10 @@ public interface Maze {
     void setCell(int i, int j, CellType cell) throws IndexOutOfBoundsException;
     CellType getCell(int i, int j) throws IndexOutOfBoundsException;
 
-    Point2d<Integer> getStartCell();
-    Point2d<Integer> getFinishCell();
+    Vec2i getStartCell();
+    Vec2i getFinishCell();
 
-    void setStartCell(Point2d<Integer> cell);
-    void setFinishCell(Point2d<Integer> cell);
+    void setStartCell(Vec2i cell);
+    void setFinishCell(Vec2i cell);
 
 }

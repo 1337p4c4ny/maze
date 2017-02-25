@@ -1,26 +1,38 @@
-import org.lwjgl.*;
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.*;
-import org.lwjgl.system.*;
+import maze.render.RendererInterface;
+import maze.render.TestRenderer;
+import org.lwjgl.Version;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.system.MemoryStack;
 
-import java.nio.*;
+import java.nio.IntBuffer;
 
-import static org.lwjgl.glfw.Callbacks.*;
+import static java.lang.Thread.sleep;
+import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryStack.*;
-import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
+import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+import static org.lwjgl.system.MemoryStack.stackPush;
+import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Main {
 
     // The window handle
     private long window;
+    private int w_width = 800;
+    private int w_height = 600;
 
     public void run() {
         Logger.info("Started with LWJGL " + Version.getVersion() + "!");
 
         init();
-        loop();
+        try {
+            loop();
+        } catch (InterruptedException e) {
+
+        }
 
         // Free the window callbacks and destroy the window
         glfwFreeCallbacks(window);
@@ -42,11 +54,12 @@ public class Main {
 
         // Configure GLFW
         glfwDefaultWindowHints(); // optional, the current window hints are already the default
+        glfwWindowHint(GLFW_SAMPLES, 4);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
         // Create the window
-        window = glfwCreateWindow(800, 600, "ArrayMaze", NULL, NULL);
+        window = glfwCreateWindow(w_width, w_height, "Maze", NULL, NULL);
         if ( window == NULL )
             throw new RuntimeException("Failed to create the GLFW window");
 
@@ -54,6 +67,11 @@ public class Main {
         glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
             if ( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE )
                 glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
+        });
+
+        glfwSetWindowSizeCallback(window, (window, width, height) -> {
+            w_width = width;
+            w_height = height;
         });
 
         // Get the thread stack and push a new frame
@@ -84,7 +102,7 @@ public class Main {
         glfwShowWindow(window);
     }
 
-    private void loop() {
+    private void loop() throws InterruptedException {
         // This line is critical for LWJGL's interoperation with GLFW's
         // OpenGL context, or any context that is managed externally.
         // LWJGL detects the context that is current in the current thread,
@@ -95,16 +113,22 @@ public class Main {
         // Set the clear color
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-        // Run the rendering loop until the user has attempted to close
-        // the window or has pressed the ESCAPE key.
+        LogicThread lt = new LogicThread(window);
+        lt.start();
+
+        RendererInterface renderer = new TestRenderer();
+
+        int[] vertexArrayID = new int[1];
+        glGenVertexArrays(vertexArrayID);
+        glBindVertexArray(vertexArrayID[0]);
         while ( !glfwWindowShouldClose(window) ) {
+            glMatrixMode(GL_MODELVIEW);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
-            glfwSwapBuffers(window); // swap the color buffers
+            renderer.render(w_width, w_height);
 
-            // Poll for window events. The key callback above will only be
-            // invoked during this call.
-            glfwPollEvents();
+            glfwSwapBuffers(window); // swap the color buffers
+            sleep(16); // around 60fps
         }
     }
 

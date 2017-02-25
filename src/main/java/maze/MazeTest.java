@@ -4,9 +4,8 @@ public class MazeTest {
 
     public static void main(String[] args) {
         MazeGenerator gen = new StupidMazeGenerator();
-        Maze maze = gen.generate(25, 25);
+        Maze maze = gen.generate(40, 40);
 
-        System.out.println();
         for (int i = 0; i < maze.getWidth(); ++i) {
             for (int j = 0; j < maze.getHeight(); ++j) {
                 System.out.print(maze.getCell(i, j)+" ");

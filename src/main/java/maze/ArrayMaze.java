@@ -1,13 +1,13 @@
 package maze;
 
-import javafx.scene.control.Cell;
+import maze.math.Vec2i;
 
 public class ArrayMaze implements Maze {
 
     private int width;
     private int height;
-    private Point2d<Integer> startCell;
-    private Point2d<Integer> finishCell;
+    private Vec2i startCell;
+    private Vec2i finishCell;
 
     private CellType[][] maze;
 
@@ -38,22 +38,22 @@ public class ArrayMaze implements Maze {
     }
 
     @Override
-    public Point2d<Integer> getStartCell() {
+    public Vec2i getStartCell() {
         return startCell;
     }
 
     @Override
-    public void setStartCell(Point2d<Integer> startCell) {
+    public void setStartCell(Vec2i startCell) {
         this.startCell = startCell;
     }
 
     @Override
-    public Point2d<Integer> getFinishCell() {
+    public Vec2i getFinishCell() {
         return finishCell;
     }
 
     @Override
-    public void setFinishCell(Point2d<Integer> finishCell) {
+    public void setFinishCell(Vec2i finishCell) {
         this.finishCell = finishCell;
     }
 }

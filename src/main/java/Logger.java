@@ -11,17 +11,23 @@ public class Logger {
 
     public static void info(String msg) {
         init();
-        log.info(msg);
+        synchronized (log) {
+            log.info(msg);
+        }
     }
 
     public static void warn(String msg) {
         init();
-        log.warning(msg);
+        synchronized (log) {
+            log.warning(msg);
+        }
     }
 
     public static void error(String msg) {
         init();
-        log.severe(msg);
+        synchronized (log) {
+            log.severe(msg);
+        }
     }
 
 }

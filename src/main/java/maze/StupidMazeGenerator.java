@@ -1,6 +1,6 @@
 package maze;
 
-import javafx.scene.control.Cell;
+import maze.math.Vec2i;
 
 import java.util.Random;
 
@@ -34,8 +34,8 @@ public class StupidMazeGenerator implements MazeGenerator {
             }
         }
 
-        arrayMaze.setStartCell(new Point2d<>(si, sj));
-        arrayMaze.setFinishCell(new Point2d<>(fi, fj));
+        arrayMaze.setStartCell(new Vec2i(si, sj));
+        arrayMaze.setFinishCell(new Vec2i(fi, fj));
 
         arrayMaze.setCell(si, sj, CellType.START);
         arrayMaze.setCell(fi, fj, CellType.FINISH);
