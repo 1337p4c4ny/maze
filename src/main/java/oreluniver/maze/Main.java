@@ -10,7 +10,7 @@ public class Main {
         try {
             boolean vSync = false;
             IGameLogic gameLogic = new MazeGame();
-            GameEngine gameEngine = new GameEngine("Maze", 1280, 720, vSync, gameLogic);
+            GameEngine gameEngine = new GameEngine("Maze", 1920, 1080, vSync, gameLogic);
             gameEngine.start();
         } catch (Exception e) {
             e.printStackTrace();

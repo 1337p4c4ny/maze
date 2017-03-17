@@ -8,9 +8,14 @@ import oreluniver.maze.engine.gfx.Camera;
 import oreluniver.maze.engine.gfx.Mesh;
 import oreluniver.maze.engine.gfx.OBJLoader;
 import oreluniver.maze.engine.gfx.Texture;
+import oreluniver.maze.level.Maze;
+import oreluniver.maze.level.MazeBuilder;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -27,7 +32,7 @@ public class MazeGame implements IGameLogic {
 
     private final Renderer renderer;
 
-    private GameItem[] gameItems;
+    private List<GameItem> gameItems;
 
     public MazeGame() {
         renderer = new Renderer();
@@ -36,65 +41,76 @@ public class MazeGame implements IGameLogic {
     @Override
     public void init() throws Exception {
         renderer.init();
-        Texture texture = new Texture("/textures/grassblock_32.png");
-        Mesh mesh = OBJLoader.loadMesh("/models/bunny.obj");
-//        Mesh mesh = OBJLoader.loadMesh("/models/cube.obj");
 
-        mesh.setTexture(texture);
-        GameItem gameItem = new GameItem(mesh);
-        gameItem.setScale(0.5f);
-        gameItem.setPosition(0, 0, -2);
-        gameItems = new GameItem[]{gameItem};
+        Maze maze = MazeBuilder.build(50, 50, 2);
+        gameItems = createWalls(maze);
+
+//        gameItems = loadBunny();
 
         camera = new Camera();
         cameraInc = new Vector3f();
     }
 
+
+    private List<GameItem> loadBunny() throws Exception {
+        Mesh mesh = OBJLoader.loadMesh("/models/bunny.obj");
+        List<GameItem> items = new ArrayList<>();
+        GameItem gameItem = new GameItem(mesh);
+//        gameItem.setScale(0.5f);
+        gameItem.setPosition(0, 0, -2);
+        items.add(gameItem);
+        return items;
+    }
+
+    private List<GameItem> createWalls(Maze maze) throws Exception {
+        Texture texture = new Texture("/textures/grassblock_32.png");
+        Mesh mesh = OBJLoader.loadMesh("/models/cube.obj");
+        mesh.setTexture(texture);
+        List<GameItem> items = new ArrayList<>();
+        GameItem gameItem;
+        for (int i = 0; i < maze.getHeight(); ++i) {
+            for (int j = 0; j < maze.getWidth(); ++j) {
+                if (maze.bitmap[i][j] == 0) {
+                    gameItem = new GameItem(mesh);
+                    gameItem.setScale(0.5f);
+                    gameItem.setPosition(j, 0, i);
+                    items.add(gameItem);
+                }
+            }
+        }
+        return items;
+    }
+
     @Override
     public void input(Window window, MouseInput mouseInput) {
         cameraInc.set(0, 0, 0);
+
         if (window.isKeyPressed(GLFW_KEY_W)) {
             cameraInc.z = -1;
         } else if (window.isKeyPressed(GLFW_KEY_S)) {
             cameraInc.z = 1;
         }
+
         if (window.isKeyPressed(GLFW_KEY_A)) {
             cameraInc.x = -1;
         } else if (window.isKeyPressed(GLFW_KEY_D)) {
             cameraInc.x = 1;
         }
+
         if (window.isKeyPressed(GLFW_KEY_Z)) {
             cameraInc.y = -1;
-        } else if (window.isKeyPressed(GLFW_KEY_X)) {
+        } else if (window.isKeyPressed(GLFW_KEY_X)){
             cameraInc.y = 1;
         }
 
-        else if (window.isKeyPressed(GLFW_KEY_LEFT)) {
-            Vector3f rotation = gameItems[0].getRotation();
-            gameItems[0].setRotation(rotation.x, rotation.y - 1, rotation.z);
-
-        } else if (window.isKeyPressed(GLFW_KEY_RIGHT)) {
-            Vector3f rotation = gameItems[0].getRotation();
-            gameItems[0].setRotation(rotation.x, rotation.y + 1, rotation.z);
-
-        } else if (window.isKeyPressed(GLFW_KEY_UP)) {
-            Vector3f rotation = gameItems[0].getRotation();
-            gameItems[0].setRotation(rotation.x + 1, rotation.y, rotation.z);
-
-        } else if (window.isKeyPressed(GLFW_KEY_DOWN)) {
-            Vector3f rotation = gameItems[0].getRotation();
-            gameItems[0].setRotation(rotation.x - 1, rotation.y, rotation.z);
+        if (window.isKeyPressed(GLFW_KEY_L)) {
+            // just to load bunny =)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
         }
 
-//        if (! window.isKeyPressed(GLFW_KEY_LEFT) && !window.isKeyPressed(GLFW_KEY_RIGHT)) {
-//            Vector3f rotation = gameItems[0].getRotation();
-//            gameItems[0].setRotation(rotation.x, 0, rotation.z);
-//        }
-//        if (! window.isKeyPressed(GLFW_KEY_UP) && ! window.isKeyPressed(GLFW_KEY_DOWN)) {
-//            Vector3f rotation = gameItems[0].getRotation();
-//            gameItems[0].setRotation(0, rotation.y, rotation.z);
-//        }
-
+        if (window.isKeyPressed(GLFW_KEY_F)) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
     }
 
     @Override
@@ -103,17 +119,11 @@ public class MazeGame implements IGameLogic {
                 cameraInc.y * CAMERA_POS_STEP,
                 cameraInc.z * CAMERA_POS_STEP);
 
-        if (mouseInput.isRightButtonPressed()) {
+        if (!mouseInput.isRightButtonPressed()) {
             Vector2f rotVec = mouseInput.getDisplVec();
             camera.moveRotation(rotVec.x * MOUSE_SENSITIVITY,
                     rotVec.y * MOUSE_SENSITIVITY, 0);
         }
-
-        float rotation = gameItems[0].getRotation().x;
-        if (rotation > 360) {
-            rotation = 0;
-        }
-        gameItems[0].setRotation(rotation, 0, 0);
     }
 
     @Override
