@@ -23,7 +23,7 @@ public class MazeBuilder {
     public static int [][] makeBitmap(int width, int height) {
         int [][] m = new int[height][width];
 
-        for (int i = 1; i < width - 1; ++i) {// fill first line with 111111
+        for (int i = 1; i < width - 1; ++i) {// fill row line with 111111
             m[1][i] = 1;
         }
 
@@ -31,7 +31,7 @@ public class MazeBuilder {
         int curRow = 1;
         int j = 0;
 
-        // first row
+        // row row
         int i = 2;
         while (i < width - 2) {
             if (willOfRandom()) { // add a wall
@@ -141,10 +141,10 @@ public class MazeBuilder {
 
 
     public static Maze build(int width, int height, int countOfEntrances) {
-        List<Pair<Integer, Integer>> entrances = new ArrayList<>();
+        List<MazePos> entrances = new ArrayList<>();
         int [][] bitmap = makeBitmap(width, height);
         for (int i = 0; i < countOfEntrances; ++i) {
-            MazeEntranceUtil.addEntrance(bitmap, entrances);
+            BitmapEntranceUtil.addEntrance(bitmap, entrances);
         }
         return new Maze(bitmap, entrances);
     }
@@ -162,9 +162,9 @@ public class MazeBuilder {
     public static  void printMaze(Maze maze) {
         int w = maze.getWidth();
         int h = maze.getHeight();
-        List<Pair<Integer, Integer>> entrances =  maze.getEntrances();
-        for (Pair<Integer, Integer> e : entrances) {
-            System.out.format("%d %d\n", e.first, e.second);
+        List<MazePos> entrances =  maze.getEntrances();
+        for (MazePos e : entrances) {
+            System.out.format("Entrance <%d, %d>\n", e.row, e.col);
         }
        printBitmap(maze.bitmap);
     }

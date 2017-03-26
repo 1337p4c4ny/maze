@@ -3,15 +3,20 @@ package oreluniver.maze.level;
 import java.util.List;
 
 public class Maze {
-    public int [][] bitmap;
-    private List<Pair<Integer, Integer>> entrances;
 
-    public Maze (int [][] bitmap, List<Pair<Integer, Integer>> entrances) {
+    /**
+     * first dimension is row,
+     * second - is column
+     */
+    public final int [][] bitmap;
+    private List<MazePos> entrances;
+
+    public Maze (int [][] bitmap, List<MazePos> entrances) {
         this.bitmap    = bitmap;
         this.entrances = entrances;
     }
 
-    public Pair<Integer, Integer> getEntrance() {
+    public MazePos getEntrance() {
         if (!entrances.isEmpty()) {
             return entrances.get(0);
         }
@@ -28,8 +33,8 @@ public class Maze {
 
     public boolean isEntrance(int x, int y) {
         boolean res = false;
-        for (Pair<Integer, Integer> e : this.entrances) {
-            res = x == e.first && y == e.second;
+        for (MazePos e : this.entrances) {
+            res = x == e.row && y == e.col;
             if (res) {
                 break;
             }
@@ -37,7 +42,7 @@ public class Maze {
         return res;
     }
 
-    public List<Pair<Integer, Integer>> getEntrances() {
+    public List<MazePos> getEntrances() {
         return this.entrances;
     }
 }

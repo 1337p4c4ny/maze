@@ -8,15 +8,10 @@ import oreluniver.maze.engine.gfx.Mesh;
 import oreluniver.maze.engine.gfx.ShaderProgram;
 import oreluniver.maze.engine.gfx.Transformation;
 import org.joml.Matrix4f;
-import org.lwjgl.system.MemoryUtil;
 
-import java.nio.FloatBuffer;
 import java.util.List;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
 
 public class Renderer {
 

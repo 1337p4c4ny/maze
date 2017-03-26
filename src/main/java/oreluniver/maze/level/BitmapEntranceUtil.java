@@ -5,11 +5,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 
 /**
- * Class - helper for adding entrances to maze
+ * Class - helper for adding entrances to maze in form of bitmap
  */
-public class MazeEntranceUtil {
+public class BitmapEntranceUtil {
 
-    private static boolean willOfRandom() {
+    static boolean willOfRandom() {
         return ThreadLocalRandom.current().nextInt(0, 2) != 0;
     }
 
@@ -18,10 +18,15 @@ public class MazeEntranceUtil {
      * @param m matrix where the entrance should be added into
      * @param entrances - list of entrances
      */
-    public static void addEntrance(int [][] m, List<Pair<Integer, Integer>> entrances) {
+    public static void addEntrance(int [][] m, List<MazePos> entrances) {
+        if (m == null || m.length == 0 || m[0].length == 0)
+            return;
+
         if (entrances.size() > 0) {
            int area = getFreeArea(entrances.get(0), m[0].length, m.length);
-
+            /* Areas:
+             * 1 2
+             * 3 4 */
            switch (area) {
                case 1:  addToFourthArea(m); break;
                case 2:  addToThirdArea(m);  break;
@@ -34,174 +39,154 @@ public class MazeEntranceUtil {
         } else {
             if (willOfRandom()) { // vertical
                 if (willOfRandom()) {
-                    entrances.add(addLeftEntrance(m));
+                    entrances.add(addEntranceInColumn(m, 0, 0, m.length));
                 }
                 else {
-                    entrances.add(addRightEntrance(m));
+                    entrances.add(addEntranceInColumn(m, m[0].length -1, 0, m.length));
                 }
             }
             else { // horizontal
                 if (willOfRandom()) {
-                    entrances.add(addTopEntrance(m));
+                    entrances.add(addEntranceInRow(m, 0, 0, m[0].length));
                 }
                 else {
-                    entrances.add(addBottomEntrance(m));
+                    entrances.add(addEntranceInRow(m, m.length-1, 0, m[0].length));
                 }
             }
         }
     }
 
-    private static Pair<Integer, Integer> addEntranceInColumn(int [][] m, int coulumn) {
-        return null;
-    }
-
-    private static Pair<Integer, Integer> addEntranceInRow(int [][] m, int row) {
-        return null;
-    }
-
-    private static Pair<Integer, Integer> addTopEntrance(int [][] m) {
-        int i = 1;
-        while (i < m[0].length - 1) {
-            if (   m[0][i] == 0
-                    && m[0][i - 1] == 0
-                    && m[0][i + 1] == 0
-                    && m[1][i] != 0
-                    && willOfRandom()
-                    )
+    private static MazePos addEntranceInColumn(int [][] m, int column, int fromRow, int toRow) {
+        int nearDif = column == 0 ? 1 : -1;
+        if (fromRow == 0) {
+            fromRow = 1;
+        }
+        if (toRow == m.length) {
+            toRow--;
+        }
+        int i = fromRow;
+        while (i < toRow) {
+            if (   m[i]    [column] == 0
+                && m[i - 1][column] == 0
+                && m[i + 1][column] == 0
+                && m[i][column + nearDif] != 0
+                && willOfRandom())
             {
-                m[0][i] = 1;
-                return new Pair<>(0, i);
+                m[i][column] = 1;
+                return new MazePos(i, column);
             }
             i++;
         }
-        return null;
-    }
-
-    private static Pair<Integer, Integer> addLeftEntrance(int [][] m) {
-        int i = 1;
-        while (i < m.length - 1) {
-            if (   m[i][0] == 0
-                    && m[i - 1][0] == 0
-                    && m[i + 1][0] == 0
-                    && m[i][1] != 0
-                    && willOfRandom()
-                    )
-            {
-                m[i][0] = 1;
-                return new Pair<>(i, 0);
+        i = fromRow;
+        while (i < toRow) {
+            if (m[i][column] == 0 && m[i][column + nearDif] != 0) {
+                m[i][column] = 1;
+                return new MazePos(i, column);
             }
             i++;
         }
+        System.out.println(String.format("Error adding entrance to column %d, starting from row %d, ending by row %d", column, fromRow, toRow));
         return null;
     }
 
-    private static Pair<Integer, Integer> addRightEntrance(int [][] m) {
-        int i = 1;
-        while (i < m.length - 1) {
-            if (   m[i][m.length - 1] == 0
-                    && m[i - 1][m[i].length - 1] == 0
-                    && m[i + 1][m[i].length - 1] == 0
-                    && m[i][m[i].length - 2] != 0
-                    && willOfRandom()
-                    )
+    private static MazePos addEntranceInRow(int [][] m, int row, int fromCol, int toCol) {
+        int nearDif = row == 0 ? 1 : -1;
+        if (fromCol == 0) {
+            fromCol = 1;
+        }
+        if (toCol == m[0].length) {
+            toCol--;
+        }
+        int i = fromCol;
+        while (i < toCol) {
+            if (   m[row][i] == 0
+                && m[row][i - 1] == 0
+                && m[row][i + 1] == 0
+                && m[row + nearDif][i] != 0
+                && willOfRandom())
             {
-                m[i][m[i].length - 1] = 1;
-                return new Pair<>(i, m[i].length - 1);
+                m[row][i] = 1;
+                return new MazePos(row, i);
             }
             i++;
         }
-        return null;
-    }
-
-    private static Pair<Integer, Integer> addBottomEntrance(int [][] m) {
-        int i = 1;
-        while (i < m[m.length - 1].length - 1) {
-            if (   m[m.length - 1][i] == 0
-                    && m[m.length - 1][i - 1] == 0
-                    && m[m.length - 1][i + 1] == 0
-                    && m[m.length - 2][i] != 0
-                    && willOfRandom()
-                    )
-            {
-                m[m.length - 1][i] = 1;
-                return new Pair<>(m.length - 1, i);
+        i = fromCol;
+        while (i < toCol) {
+            if (m[row][i] == 0 && m[row + nearDif][i] != 0) {
+                m[row][i] = 1;
+                return new MazePos(row, i);
             }
             i++;
         }
+        System.out.println(String.format("Error adding entrance to row %d, starting from column %d, ending by column %d", row, fromCol, toCol));
         return null;
     }
 
-    private static Pair<Integer, Integer> addToFirstArea(int [][] m) {
-        if (willOfRandom()) {
-            // add to top first
-            return null;
+    private static MazePos addToFirstArea(int [][] m) {
+        if (willOfRandom()) { // add to top row
+            return addEntranceInRow(m, 0, 0, m[0].length / 2);
         }
-        else {
-            // add to left first
-            return null;
+        else { // add to left row
+            return addEntranceInColumn(m, 0, 0, m.length / 2);
         }
     }
 
 
-    private static Pair<Integer, Integer> addToSecondArea(int [][] m) {
-        if (willOfRandom()) {
-            // add to top second
-            return null;
+    private static MazePos addToSecondArea(int [][] m) {
+        if (willOfRandom()) { // add to top col
+            return addEntranceInRow(m, 0, m[0].length / 2, m[0].length);
         }
-        else {
-            // add to right second
-            return null;
+        else { // add to right col
+            return addEntranceInColumn(m, m[0].length -1, 0, m.length / 2);
         }
     }
 
-    private static Pair<Integer, Integer> addToThirdArea(int [][] m) {
-        if (willOfRandom()) {
-            // add to left third
-            return null;
+    private static MazePos addToThirdArea(int [][] m) {
+        if (willOfRandom()) { // add to left third
+            return addEntranceInColumn(m, 0, m.length / 2, m.length);
         }
-        else {
-            // add to bottom third
-            return null;
+        else { // add to bottom third
+            return addEntranceInRow(m, m.length - 1, 0, m[0].length / 2);
         }
     }
 
-    private static Pair<Integer, Integer> addToFourthArea(int [][] m) {
+    private static MazePos addToFourthArea(int [][] m) {
         if (willOfRandom()) {
             // add to bottom fourth
-            return null;
+            return addEntranceInRow(m, m.length - 1, m[0].length / 2, m[0].length);
         }
         else {
             // add to right fourth
-            return null;
+            return addEntranceInColumn(m, m[0].length - 1, m.length / 2, m.length);
         }
     }
 
-    private static int getFreeArea(Pair<Integer, Integer> entrance, int w, int h) {
-        if ( (entrance.first == 0 && entrance.second < w / 2)
-            || (entrance.second == 0 && entrance.first < h / 2))
-        { // first is ocupied, 4-th is free
+    private static int getFreeArea(MazePos entrance, int w, int h) {
+        if ( (entrance.row == 0 && entrance.col < w / 2)
+            || (entrance.col == 0 && entrance.row < h / 2))
+        { // row is ocupied, 4-th is free
             return 1;
         }
 
-        if ((entrance.first == 0 && entrance.second >= w / 2)
-            || (entrance.second == w - 1 && entrance.first < h / 2))
-        { // second is occupied, third is free
+        if ((entrance.row == 0 && entrance.col >= w / 2)
+            || (entrance.col == w - 1 && entrance.row < h / 2))
+        { // col is occupied, third is free
             return 2;
         }
 
-        if ((entrance.second == 0 && entrance.first >= h / 2)
-            || (entrance.first == h - 1 && entrance.second < w / 2))
-        { // third is occupied, second is free
+        if ((entrance.col == 0 && entrance.row >= h / 2)
+            || (entrance.row == h - 1 && entrance.col < w / 2))
+        { // third is occupied, col is free
             return 4;
         }
 
-        // if ((entrance.first == h -1 && entrnacce.second >= w / 2)
-        //     || (entrnacce.second == w -1 && entrnacce.first >= h / 2))
+        // if ((entrance.row == h -1 && entrnacce.col >= w / 2)
+        //     || (entrnacce.col == w -1 && entrnacce.row >= h / 2))
         // {
         //     return 8
         // }
 
-        // 4-th is occupied, first is free
+        // 4-th is occupied, row is free
         return 8;
     }
 }

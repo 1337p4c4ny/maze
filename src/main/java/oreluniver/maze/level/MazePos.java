@@ -1,11 +1,11 @@
 package oreluniver.maze.level;
 
-public class Pair<T1, T2> {
-    public T1 row;
-    public T2 second;
+public class MazePos {
+    public int row;
+    public int col;
 
-    public Pair(T1 row, T2 col) {
+    public MazePos(int row, int col) {
         this.row = row;
-        this.second = col;
+        this.col = col;
     }
 }

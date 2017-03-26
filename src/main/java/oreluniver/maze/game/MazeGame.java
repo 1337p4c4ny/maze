@@ -10,9 +10,9 @@ import oreluniver.maze.engine.gfx.OBJLoader;
 import oreluniver.maze.engine.gfx.Texture;
 import oreluniver.maze.level.Maze;
 import oreluniver.maze.level.MazeBuilder;
+import oreluniver.maze.level.MazePos;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,6 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
 public class MazeGame implements IGameLogic {
-
 
     private static final float CAMERA_POS_STEP = 0.1f;
     private static final float MOUSE_SENSITIVITY = 0.2f;
@@ -34,6 +33,8 @@ public class MazeGame implements IGameLogic {
 
     private List<GameItem> gameItems;
 
+    private Maze maze;
+
     public MazeGame() {
         renderer = new Renderer();
     }
@@ -42,13 +43,38 @@ public class MazeGame implements IGameLogic {
     public void init() throws Exception {
         renderer.init();
 
-        Maze maze = MazeBuilder.build(50, 50, 2);
+        maze = MazeBuilder.build(50, 50, 2);
+//        int [][] bitmap = new int [][] {{1, 1, 1},
+//                                        {1, 0, 1},
+//                                        {1, 1, 1}};
+
+//        maze = new Maze(bitmap, new ArrayList<>());
         gameItems = createWalls(maze);
 
 //        gameItems = loadBunny();
+//        gameItems = loadFloor();
 
         camera = new Camera();
+
+        MazePos pos = Utils.getSpawnPosition(this.maze.bitmap);
+//        System.out.println(String.format("col: %d row: %d", pos.col, pos.row));
+
+        camera.setPosition(pos.col, 1, pos.row);
+//        camera.setPosition(1, 0, 0);
+//        camera.setRotation(0, 180, 0);
         cameraInc = new Vector3f();
+    }
+
+
+    private List<GameItem> loadFloor() throws Exception {
+        List<GameItem> items = new ArrayList<>();
+        Texture texture = new Texture("/textures/grassblock_32.png");
+        Mesh mesh = OBJLoader.loadMesh("/models/floor.obj");
+        mesh.setTexture(texture);
+        GameItem floor = new GameItem(mesh);
+        floor.setPosition(0, 0, -2);
+        items.add(floor);
+        return items;
     }
 
 
@@ -63,17 +89,37 @@ public class MazeGame implements IGameLogic {
     }
 
     private List<GameItem> createWalls(Maze maze) throws Exception {
-        Texture texture = new Texture("/textures/grassblock_32.png");
-        Mesh mesh = OBJLoader.loadMesh("/models/cube.obj");
-        mesh.setTexture(texture);
+        Texture cubeTexture = new Texture("/textures/grassblock_32.png");
+        Texture floorTexture = new Texture("/textures/sand_1.png");
+
+        Mesh wallMesh = OBJLoader.loadMesh("/models/cube.obj");
+        Mesh floorMesh = OBJLoader.loadMesh("/models/floor.obj");
+
+        wallMesh.setTexture(cubeTexture);
+        floorMesh.setTexture(floorTexture);
+
         List<GameItem> items = new ArrayList<>();
         GameItem gameItem;
         for (int i = 0; i < maze.getHeight(); ++i) {
             for (int j = 0; j < maze.getWidth(); ++j) {
                 if (maze.bitmap[i][j] == 0) {
-                    gameItem = new GameItem(mesh);
+
+                    // bottom brick
+                    gameItem = new GameItem(wallMesh);
                     gameItem.setScale(0.5f);
                     gameItem.setPosition(j, 0, i);
+                    items.add(gameItem);
+
+                    //top brick
+                    gameItem = new GameItem(wallMesh);
+                    gameItem.setScale(0.5f);
+                    gameItem.setPosition(j, 1, i);
+                    items.add(gameItem);
+                }
+                else {
+                    gameItem = new GameItem(floorMesh);
+                    gameItem.setScale(0.5f);
+                    gameItem.setPosition(j, -0.5f, i);
                     items.add(gameItem);
                 }
             }
@@ -104,7 +150,6 @@ public class MazeGame implements IGameLogic {
         }
 
         if (window.isKeyPressed(GLFW_KEY_L)) {
-            // just to load bunny =)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
         }
 
@@ -115,9 +160,14 @@ public class MazeGame implements IGameLogic {
 
     @Override
     public void update(float interval, MouseInput mouseInput) {
-        camera.movePosition(cameraInc.x * CAMERA_POS_STEP,
-                cameraInc.y * CAMERA_POS_STEP,
-                cameraInc.z * CAMERA_POS_STEP);
+        Vector3f v = new Vector3f(cameraInc.x * CAMERA_POS_STEP,
+                                  cameraInc.y * CAMERA_POS_STEP,
+                                  cameraInc.z * CAMERA_POS_STEP);
+
+        Vector3f oldPos = camera.getPosition();
+        camera.movePosition(v, this.maze.bitmap);
+        Vector3f pos = camera.getPosition();
+        Utils.checkCollision(oldPos, pos, this.maze.bitmap);
 
         if (!mouseInput.isRightButtonPressed()) {
             Vector2f rotVec = mouseInput.getDisplVec();
@@ -132,10 +182,12 @@ public class MazeGame implements IGameLogic {
     }
 
     @Override
-    public void cleanup() {
+    public void cleanup () {
         renderer.cleanup();
         for (GameItem gameItem : gameItems) {
             gameItem.getMesh().cleanUp();
         }
     }
+
+
 }
