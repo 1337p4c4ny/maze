@@ -4,10 +4,7 @@ import oreluniver.maze.engine.GameItem;
 import oreluniver.maze.engine.IGameLogic;
 import oreluniver.maze.engine.MouseInput;
 import oreluniver.maze.engine.Window;
-import oreluniver.maze.engine.gfx.Camera;
-import oreluniver.maze.engine.gfx.Mesh;
-import oreluniver.maze.engine.gfx.OBJLoader;
-import oreluniver.maze.engine.gfx.Texture;
+import oreluniver.maze.engine.gfx.*;
 import oreluniver.maze.level.Maze;
 import oreluniver.maze.level.MazeBuilder;
 import oreluniver.maze.level.MazePos;
@@ -35,42 +32,54 @@ public class MazeGame implements IGameLogic {
 
     private Maze maze;
 
+    private Vector3f ambientLight;
+    private PointLight pointLight;
+    private DirectionalLight directionalLight;
+
     public MazeGame() {
         renderer = new Renderer();
     }
 
     @Override
-    public void init() throws Exception {
-        renderer.init();
+    public void init(Window window) throws Exception {
+        renderer.init(window);
 
         maze = MazeBuilder.build(50, 50, 2);
-//        int [][] bitmap = new int [][] {{1, 1, 1},
-//                                        {1, 0, 1},
-//                                        {1, 1, 1}};
 
-//        maze = new Maze(bitmap, new ArrayList<>());
-        gameItems = createWalls(maze);
 
-//        gameItems = loadBunny();
-//        gameItems = loadFloor();
+//        maze = new Maze(makeMockBitmap(), new ArrayList<>());
+        gameItems = createLevel(maze);
+
+
+//        GameItem bunny = loadBunny();
+//        bunny.setPosition(maze.getWidth() / 2, 2, maze.getHeight() / 2);
+//        gameItems.add(bunny);
 
         camera = new Camera();
 
         MazePos pos = Utils.getSpawnPosition(this.maze.bitmap);
-//        System.out.println(String.format("col: %d row: %d", pos.col, pos.row));
 
         camera.setPosition(pos.col, 1, pos.row);
 //        camera.setPosition(1, 0, 0);
 //        camera.setRotation(0, 180, 0);
         cameraInc = new Vector3f();
+        setUpLight();
     }
 
+
+    private int [][] makeMockBitmap() {
+        return new int [][] {
+            {1, 1, 1},
+            {1, 0, 1},
+            {1, 1, 1}
+        };
+    }
 
     private List<GameItem> loadFloor() throws Exception {
         List<GameItem> items = new ArrayList<>();
         Texture texture = new Texture("/textures/grassblock_32.png");
         Mesh mesh = OBJLoader.loadMesh("/models/floor.obj");
-        mesh.setTexture(texture);
+        mesh.setMaterial(new Material(texture));
         GameItem floor = new GameItem(mesh);
         floor.setPosition(0, 0, -2);
         items.add(floor);
@@ -78,25 +87,21 @@ public class MazeGame implements IGameLogic {
     }
 
 
-    private List<GameItem> loadBunny() throws Exception {
+    private GameItem loadBunny() throws Exception {
         Mesh mesh = OBJLoader.loadMesh("/models/bunny.obj");
-        List<GameItem> items = new ArrayList<>();
         GameItem gameItem = new GameItem(mesh);
 //        gameItem.setScale(0.5f);
-        gameItem.setPosition(0, 0, -2);
-        items.add(gameItem);
-        return items;
+        return gameItem;
     }
 
-    private List<GameItem> createWalls(Maze maze) throws Exception {
+    private List<GameItem> createLevel(Maze maze) throws Exception {
         Texture cubeTexture = new Texture("/textures/grassblock_32.png");
-        Texture floorTexture = new Texture("/textures/sand_1.png");
 
         Mesh wallMesh = OBJLoader.loadMesh("/models/cube.obj");
-        Mesh floorMesh = OBJLoader.loadMesh("/models/floor.obj");
 
-        wallMesh.setTexture(cubeTexture);
-        floorMesh.setTexture(floorTexture);
+
+        wallMesh.setMaterial(new Material(cubeTexture));
+
 
         List<GameItem> items = new ArrayList<>();
         GameItem gameItem;
@@ -116,15 +121,50 @@ public class MazeGame implements IGameLogic {
                     gameItem.setPosition(j, 1, i);
                     items.add(gameItem);
                 }
-                else {
-                    gameItem = new GameItem(floorMesh);
-                    gameItem.setScale(0.5f);
-                    gameItem.setPosition(j, -0.5f, i);
-                    items.add(gameItem);
-                }
+
             }
         }
+        items.add(createFloor(maze));
+        items.add(createSkyBox());
         return items;
+    }
+
+    private GameItem createSkyBox() throws Exception {
+        Texture texture = new Texture("/textures/skybox.png");
+        Mesh mesh = OBJLoader.loadMesh("/models/skybox.obj");
+        mesh.setMaterial(new Material(texture));
+
+        GameItem skyBox = new GameItem(mesh);
+        skyBox.setScale(500);
+        return skyBox;
+    }
+
+    private GameItem createFloor(Maze maze) throws Exception {
+        Texture floorTexture = new Texture("/textures/sand_1.png");
+        Mesh floorMesh = OBJLoader.loadMesh("/models/floor.obj");
+        floorMesh.setMaterial(new Material(floorTexture));
+        GameItem floorItem;
+        floorItem = new GameItem(floorMesh);
+        float scale = Math.max(maze.getWidth(), maze.getHeight()) / 2 + 1;
+        floorItem.setScale(scale);
+        floorItem.setPosition(maze.getWidth() / 2, -0.5f, maze.getHeight() / 2);
+        return floorItem;
+    }
+
+    private void setUpLight() {
+        ambientLight = new Vector3f(0.3f, 0.3f, 0.3f);
+
+        Vector3f lightColour = new Vector3f(1, 1, 1);
+        Vector3f lightPosition = new Vector3f(0, 5, 0);
+        float lightIntensity = 1.0f;
+
+        pointLight = new PointLight(lightColour, lightPosition, lightIntensity);
+        PointLight.Attenuation att = new PointLight.Attenuation(0.0f, 0.0f, 1.0f);
+        pointLight.setAttenuation(att);
+
+        lightPosition = new Vector3f(1, 5, 0);
+        lightColour = new Vector3f(1, 1, 1);
+        directionalLight = new DirectionalLight(lightColour, lightPosition, lightIntensity);
     }
 
     @Override
@@ -178,7 +218,7 @@ public class MazeGame implements IGameLogic {
 
     @Override
     public void render(Window window) {
-        renderer.render(window, camera, gameItems);
+        renderer.render(window, camera, gameItems, ambientLight, pointLight, directionalLight);
     }
 
     @Override

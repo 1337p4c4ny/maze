@@ -27,6 +27,8 @@ public class MouseInput {
 
     private GLFWMouseButtonCallback mouseButtonCallback;
 
+    private int c = 0;
+
     public MouseInput() {
         previousPos = new Vector2d(-1, -1);
         currentPos = new Vector2d(0, 0);
@@ -54,6 +56,8 @@ public class MouseInput {
                 rightButtonPressed = button == GLFW_MOUSE_BUTTON_2 && action == GLFW_PRESS;
             }
         });
+//        new Cursor(1, 1, 0, 0, 1, BufferUtils.createIntBuffer(1), null);
+//        Mouse.MousesetNativeCursor(emptyCursor);
     }
 
     public Vector2f getDisplVec() {
@@ -77,6 +81,14 @@ public class MouseInput {
         }
         previousPos.x = currentPos.x;
         previousPos.y = currentPos.y;
+
+//        c++;
+//        if (c % 20 == 0) {
+//            glfwSetCursorPos(window.getWindowHandle(), window.getWidth() / 2, window.getHeight() / 2);
+//            previousPos.x = window.getWidth()/2;
+//            previousPos.y = window.getHeight()/2;
+//            c = 0;
+//        }
     }
 
     public boolean isLeftButtonPressed() {

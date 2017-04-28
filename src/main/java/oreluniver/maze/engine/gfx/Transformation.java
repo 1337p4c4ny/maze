@@ -12,6 +12,9 @@ public class Transformation {
 
     private final Matrix4f viewMatrix;
 
+    private Vector3f rotationVectorX = new Vector3f(1, 0, 0);
+    private Vector3f rotationVectorY = new Vector3f(0, 1, 0);
+
     public Transformation() {
         modelViewMatrix = new Matrix4f();
         projectionMatrix = new Matrix4f();
@@ -46,9 +49,9 @@ public class Transformation {
         // First do the rotation so camera rotates over its position
         viewMatrix
                 .rotate((float) Math.toRadians(rotation.x),
-                        new Vector3f(1, 0, 0))
+                        rotationVectorX)
                 .rotate((float) Math.toRadians(rotation.y),
-                        new Vector3f(0, 1, 0));
+                        rotationVectorY);
         // Then do the translation
         viewMatrix.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
         return viewMatrix;
